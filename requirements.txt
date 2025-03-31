@@ -1,0 +1,14 @@
+annotated-types==0.7.0
+fastapi==0.115.11
+fastapi-cli==0.0.7
+numpy==1.26.3
+pandas==2.2.3
+pydantic==2.10.6
+pydantic_core==2.27.2
+scikit-learn==1.6.1
+torch==2.5.1
+torchvision==0.20.1
+typing_extensions==4.12.2
+uvicorn==0.34.0
+uvloop==0.21.0
+yfinance==0.2.54
