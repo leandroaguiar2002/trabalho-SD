@@ -1,2 +1,4 @@
 __pycache__/
-dockerfile
+.env
+config.json
+app/stock_data_csv/

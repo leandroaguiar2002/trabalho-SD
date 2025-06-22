@@ -2,7 +2,7 @@ import yfinance as yf
 import numpy as np
 import pandas as pd
 import torch
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException  
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.model_selection import train_test_split
 from torch.utils.data import TensorDataset, DataLoader
@@ -87,12 +87,13 @@ async def root():
 @app.post('/forecast/{stock}', response_model=StockForecastResponse)
 async def forecast_stock(stock: str, requestParam: StockForecastRequest):
   try:
-    tck = yf.Ticker(stock)
-    start_date = "2010-03-20"
-    df = tck.history(start=start_date, end=None)
+
+    csv_file_path = f"stock_data_csv/{stock}_30d_data.csv"
+
+    df = pd.read_csv(csv_file_path)
     
     if df.empty:
-        return {'error' : 'Stock not found'}
+        raise HTTPException(status_code=404, detail=f"Stock '{stock}' not found")
     
     df = df.reset_index()
     df['Volume'] = df['Volume'].astype('float64')
@@ -138,7 +139,7 @@ async def forecast_stock(stock: str, requestParam: StockForecastRequest):
     val_dataloader_10d = DataLoader(val_set_10d, batch_size=32, shuffle=False)
     
     mse = nn.MSELoss()
-    epochs = 50
+    epochs = 5
     num_feature = 4  
     model = NeuralNetwork(num_feature)
     
@@ -195,7 +196,8 @@ async def forecast_stock(stock: str, requestParam: StockForecastRequest):
         columns=['Open', 'High', 'Low', 'Close']
     )
 
-    last_date_in_df = df['Date'].iloc[-1]
+    # Fix: Convert string date to datetime object
+    last_date_in_df = pd.to_datetime(df['Date'].iloc[-1])
 
     next_dates = pd.date_range(start=last_date_in_df + pd.Timedelta(days=1), periods=days_num)
 
@@ -218,5 +220,4 @@ async def forecast_stock(stock: str, requestParam: StockForecastRequest):
     return response
 
   except Exception as e:
-    return {'error': str(e)}
-      
+    raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
